@@ -1,0 +1,136 @@
+
+=== PERFECT FLAGS ===============================================================
+
+PERFECT_BRANCH_PRED = 1
+PERFECT_DCACHE      = 0
+PERFECT_ICACHE      = 1
+PERFECT_TRACE_CACHE = 1
+ORACLE_DISAMBIG     = 1
+
+=== STRUCTURES AND POLICIES =====================================================
+
+FETCH QUEUE = 64
+RENAMER:
+   ACTIVE LIST = 2048
+   PHYSICAL REGISTER FILE = 2112 (auto-sized w.r.t. Active List)
+   BRANCH CHECKPOINTS = 64
+SCHEDULER:
+   ISSUE QUEUE = 512
+   PARTITIONS = 4
+   PRESTEER = 0
+   IDEAL AGE-BASED = 1
+LOAD/STORE UNIT:
+   LOAD QUEUE = 1024
+   STORE QUEUE = 1024
+   Loads synchronize (stall/unstall) at: IQ
+   MEMORY DEPENDENCE PREDICTOR: oracle
+   SPLIT STORES = 0
+
+=== PIPELINE STAGE WIDTHS =======================================================
+
+FETCH WIDTH = 16
+DISPATCH WIDTH = 16
+ISSUE WIDTH = 16
+RETIRE WIDTH = 16
+
+=== EXECUTION LANES =============================================================
+
+        |latency |   BR   |   LS   |  ALU_S |  ALU_C | LS_FP  | ALU_FP |  MTF   |
+        +--------+--------+--------+--------+--------+--------+--------+--------+
+lane 0  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 1  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 2  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 3  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 4  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 5  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 6  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 7  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 8  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 9  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 10  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 11  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 12  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 13  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 14  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+lane 15  |    1   |   x    |   x    |   x    |   x    |   x    |   x    |   x    |
+
+=== MEMORY HIERARCHY ============================================================
+
+L1 I$:
+   64 KB, 8-way set-associative, 64 B block size
+   hit latency = 1 cycles (superseded by fetch unit's pipeline depth)
+   MHSRs = 32
+L1 D$:
+   64 KB, 4-way set-associative, 64 B block size
+   hit latency = 1 cycles (superseded by load/store lane's pipeline depth)
+   MHSRs = 128
+L2$:
+   1 MB, 8-way set-associative, 64 B block size
+   hit latency = 10 cycles 
+   MHSRs = 128
+L3$:
+   8 MB, 16-way set-associative, 128 B block size
+   hit latency = 30 cycles 
+   MHSRs = 128
+   miss latency = 100 cycles
+
+=== BRANCH PREDICTOR ============================================================
+
+BQ_SIZE = 2176 (auto-sized)
+BTB_ENTRIES = 8192
+BTB_ASSOC = 4
+RAS_SIZE = 64
+RAS_RECOVER_MODEL = RAS_RECOVER_TOS_POINTER_AND_CONTENT
+COND_BRANCH_PRED_PER_CYCLE = 3
+CBP_ALGORITHM = gshare
+CBP_PC_LENGTH = 20
+CBP_BHR_LENGTH = 16
+IBP_PC_LENGTH = 20
+IBP_BHR_LENGTH = 16
+ENABLE_TRACE_CACHE = 1
+
+=== INTERNAL SIMULATOR STRUCTURES ===============================================
+
+PAYLOAD_BUFFER_SIZE = 8192
+
+=== END CONFIGURATION ===========================================================
+
+[stats]
+commit_count : 10000001
+cycle_count : 1487086
+exception_count : 0
+ld_vio_count : 0
+split_count : 0
+[rates]
+ipc_rate : 6.72
+BRANCH PREDICTION MEASUREMENTS---------------------
+Type                      n          m     mr  mpki
+All                 1867409          0  0.00%  0.00
+Branch              1605594          0  0.00%  0.00
+Jump Direct          261815          0  0.00%  0.00
+Call Direct               0          0  -nan%  0.00
+Jump Indirect             0          0  -nan%  0.00
+Call Indirect             0          0  -nan%  0.00
+Return                    0          0  -nan%  0.00
+(Number of Jump Indirects whose target was the next sequential PC = 0)
+(Average number of instructions between taken branches = 8.29)
+BTB MEASUREMENTS-----------------------------------
+BTB misses (fetch cycles squashed due to a BTB miss) = 0 (0.00% of all cycles)
+LSU MEASUREMENTS-----------------------------------
+LOADS (retired)
+  loads            = 1413835
+  disambig. stall  = 0 (0.00%)
+     disambig. stall: addr. unknown = 0 (0.00%)
+        true dep. stall             = 0 (0.00%)
+        false dep. stall            = 0 (0.00%)
+     disambig. stall: value or size = 0 (0.00%)
+  load violations  = 0 (0.00%)
+  forward          = 542606 (38.38%)
+  miss stall       = 392452 (27.76%)
+STORES (retired)
+  stores           = 430379
+  miss stall       = 0 (0.00%)
+MDP quick stats
+  average # extra cycles load waits in IQ for inum wakeup = 6.57 cycles
+  # loads falsely stalled at LQ = 0
+  # load violations = 0

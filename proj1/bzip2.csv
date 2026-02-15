@@ -1,0 +1,43 @@
+stats_file,ipc_rate,mode,config,al,lq,iq,mdp,pbp,pdc,ptc
+stats.26-01-29.22_34_21.log,6.49,perfALL,config1,128,64,32,oracle,1,1,1
+stats.26-01-29.22_58_10.log,10.77,perfALL,config2,256,128,64,oracle,1,1,1
+stats.26-01-29.23_01_19.log,12.65,perfALL,config3,512,256,128,oracle,1,1,1
+stats.26-01-29.23_03_05.log,13.31,perfALL,config4,1024,512,256,oracle,1,1,1
+stats.26-01-29.23_04_30.log,13.33,perfALL,config5,2048,1024,512,oracle,1,1,1
+stats.26-01-29.23_05_53.log,13.33,perfALL,config6,4096,2048,1024,oracle,1,1,1
+stats.26-01-30.22_25_00.log,2.46,realD$,config1,128,64,32,oracle,1,0,1
+stats.26-01-30.22_25_19.log,3.61,realD$,config2,256,128,64,oracle,1,0,1
+stats.26-01-30.22_25_37.log,4.38,realD$,config3,512,256,128,oracle,1,0,1
+stats.26-01-30.22_25_56.log,5.41,realD$,config4,1024,512,256,oracle,1,0,1
+stats.26-01-30.22_26_17.log,6.72,realD$,config5,2048,1024,512,oracle,1,0,1
+stats.26-01-30.22_26_40.log,6.95,realD$,config6,4096,2048,1024,oracle,1,0,1
+stats.26-01-30.22_27_06.log,1.95,realBP,config1,128,64,32,oracle,0,1,1
+stats.26-01-30.22_27_30.log,2.01,realBP,config2,256,128,64,oracle,0,1,1
+stats.26-01-30.22_27_57.log,2.02,realBP,config3,512,256,128,oracle,0,1,1
+stats.26-01-30.22_28_26.log,2.02,realBP,config4,1024,512,256,oracle,0,1,1
+stats.26-01-30.22_28_58.log,2.02,realBP,config5,2048,1024,512,oracle,0,1,1
+stats.26-01-30.22_29_32.log,2.02,realBP,config6,4096,2048,1024,oracle,0,1,1
+stats.26-01-30.22_30_15.log,6.41,noT$,config1,128,64,32,oracle,1,1,0
+stats.26-01-30.22_30_29.log,7.6,noT$,config2,256,128,64,oracle,1,1,0
+stats.26-01-30.22_30_44.log,7.86,noT$,config3,512,256,128,oracle,1,1,0
+stats.26-01-30.22_31_00.log,7.9,noT$,config4,1024,512,256,oracle,1,1,0
+stats.26-01-30.22_31_15.log,7.9,noT$,config5,2048,1024,512,oracle,1,1,0
+stats.26-01-30.22_31_31.log,7.9,noT$,config6,4096,2048,1024,oracle,1,1,0
+stats.26-01-30.22_31_48.log,5.75,unknown,config1,128,64,32,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_32_02.log,7.54,unknown,config2,256,128,64,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_32_15.log,8.48,unknown,config3,512,256,128,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_32_29.log,8.8,unknown,config4,1024,512,256,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_32_44.log,8.81,unknown,config5,2048,1024,512,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_33_03.log,8.81,unknown,config6,4096,2048,1024,always predict conflict (always speculatively stall),1,1,1
+stats.26-01-30.22_33_25.log,5.44,unknown,config1,128,64,32,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_33_38.log,6.37,unknown,config2,256,128,64,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_33_53.log,6.03,unknown,config3,512,256,128,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_34_10.log,5.95,unknown,config4,1024,512,256,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_34_28.log,5.95,unknown,config5,2048,1024,512,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_34_49.log,5.95,unknown,config6,4096,2048,1024,always predict no conflict (always speculatively execute),1,1,1
+stats.26-01-30.22_35_11.log,6.44,realMDP-SS,config1,128,64,32,Store Sets,1,1,1
+stats.26-01-30.22_35_23.log,9.61,realMDP-SS,config2,256,128,64,Store Sets,1,1,1
+stats.26-01-30.22_35_36.log,10.92,realMDP-SS,config3,512,256,128,Store Sets,1,1,1
+stats.26-01-30.22_35_48.log,12.36,realMDP-SS,config4,1024,512,256,Store Sets,1,1,1
+stats.26-01-30.22_36_02.log,12.75,realMDP-SS,config5,2048,1024,512,Store Sets,1,1,1
+stats.26-01-30.22_36_20.log,12.75,realMDP-SS,config6,4096,2048,1024,Store Sets,1,1,1

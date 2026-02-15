@@ -1,0 +1,18 @@
+# Normalize line endings (important for Linux/Hydra builds)
+* text=auto eol=lf
+
+# Source files
+*.c   text eol=lf
+*.cpp text eol=lf
+*.h   text eol=lf
+*.cu  text eol=lf
+*.cuh text eol=lf
+
+# Build files
+Makefile text eol=lf
+*.mk  text eol=lf
+*.sh  text eol=lf
+
+# Data files used by 721sim
+*.txt text eol=lf
+*.csv text eol=lf
