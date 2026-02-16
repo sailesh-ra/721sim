@@ -46,9 +46,9 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
                             bool csr,
                             uint64_t PC) {
   // TODO
-  uint64_t AL_index = active_list_tail;
+  
 
-  return AL_index
+  return false; (placeholder)
 }
 
 bool renamer::is_ready(uint64_t phys_reg) { return false; }
