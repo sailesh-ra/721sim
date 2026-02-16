@@ -48,7 +48,7 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
   // TODO
   
 
-  return false; (placeholder)
+  return false; //placeholder
 }
 
 bool renamer::is_ready(uint64_t phys_reg) { return false; }
