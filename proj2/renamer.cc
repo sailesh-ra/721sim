@@ -6,6 +6,8 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
   // TODO: initialize
 }
 
+renamer::~renamer() {}
+
 bool renamer::stall_reg(uint64_t bundle_dst) {
   return false; // TODO
 }
@@ -34,7 +36,7 @@ bool renamer::stall_dispatch(uint64_t bundle_inst) {
   return false; // TODO
 }
 
-void renamer::dispatch_inst(bool dest_valid,
+uint64_t renamer::dispatch_inst(bool dest_valid,
                             uint64_t log_reg,
                             uint64_t phys_reg,
                             bool load,
@@ -68,5 +70,3 @@ void renamer::set_load_violation(uint64_t AL_index) {}
 void renamer::set_branch_misprediction(uint64_t AL_index) {}
 void renamer::set_value_misprediction(uint64_t AL_index) {}
 bool renamer::get_exception(uint64_t AL_index) { return false; }
-
-~renamer();
