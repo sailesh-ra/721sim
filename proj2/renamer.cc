@@ -10,6 +10,7 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
     // Save sizes
     n_log = n_log_regs;
     n_phys = n_phys_regs;
+    this->n_active = n_active;
     al_size = n_active;
     n_br = n_branches;
 
@@ -33,9 +34,16 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     for(uint64_t p = 0; p < n_phys; p++) {
         PRF[p] = 0;
-        ready[p] = true;
+        ready[p] = (p < n_log); // default: not ready
     }
 
+    for(uint64_t p = 0; p < n_log; p++) {
+        ready[p] = true; // commited regs ready
+    }
+
+    PRF[0] = 0;
+    ready[0] = true;
+    
     // Free List holds only extra physical regs: [n_log .. n_phys -1]
     fl_size = n_phys - n_log;
     FL = new uint64_t[fl_size];
@@ -158,6 +166,12 @@ uint64_t renamer::rename_rsrc(uint64_t log_reg)
 uint64_t renamer::rename_rdst(uint64_t log_reg)
 {
     assert(log_reg < n_log);
+
+    if (log_reg == 0) {
+    // x0 is not renamable; keep it mapped to phys 0
+    return 0;
+    }
+
     // Must have atleast one free physical register
     assert(fl_occupancy() > 0);
 
