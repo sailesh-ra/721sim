@@ -6,6 +6,13 @@ private:
 	// Put private class variables here.
 	/////////////////////////////////////////////////////////////////////
 
+	//map tables + prf
+	uint64_t n_log,n_phys,n_active,n_br;
+	uint64_t* RMT; // size n_log
+	uint64_t* AMT; // size n_log
+	uint64_t* PRF; // size n_phys
+	bool* ready; // size n_phys
+	
 	/////////////////////////////////////////////////////////////////////
 	// Structure 1: Rename Map Table
 	// Entry contains: physical register mapping
@@ -24,7 +31,14 @@ private:
 	// Notes:
 	// * Structure includes head, tail, and their phase bits.
 	/////////////////////////////////////////////////////////////////////
-
+  	
+	// Free list (Circular FIFO)
+	uint64_t fl_size;
+	uint64_t* FL; // holds phy reg numbers
+	uint64_t fl_head,fl_tail;
+	bool fl_head_phase, fl_tail_phase;
+	uint64_t fl_occupancy() const;
+	
 	/////////////////////////////////////////////////////////////////////
 	// Structure 4: Active List
 	//
@@ -63,6 +77,24 @@ private:
 	// Notes:
 	// * Structure includes head, tail, and their phase bits.
 	/////////////////////////////////////////////////////////////////////
+
+	struct AL_entry {
+		bool valid;
+		bool completed;
+		bool exception, load_viol, br_misp, val_misp;
+		bool load, store, branch, amo, csr;
+		bool dest_valid;
+		uint64_t log_reg;
+		uint64_t phys_reg;
+		uint64_t PC;
+	};
+
+	uint64_t al_size;
+	AL_entry* AL;
+	uint64_t al_head, al_tail;
+	bool al_head_phase, al_tail_phase;
+	bool al_full() const;
+	bool al_empty() const;
 
 	/////////////////////////////////////////////////////////////////////
 	// Structure 5: Physical Register File
@@ -116,6 +148,8 @@ private:
 	// 1 to 64.
 	/////////////////////////////////////////////////////////////////////
 	uint64_t GBM;
+	// mask of valid GBM bits (low n_br bits are used)
+	uint64_t gbm_mask;
 
 	/////////////////////////////////////////////////////////////////////
 	// Structure 8: Branch Checkpoints
@@ -125,6 +159,15 @@ private:
 	// 2. checkpointed Free List head pointer and its phase bit
 	// 3. checkpointed GBM
 	/////////////////////////////////////////////////////////////////////
+	
+	struct br_ckpt_t {
+    uint64_t* shadow_RMT;   // size n_log
+    uint64_t  fl_head;
+    bool      fl_head_phase;
+    uint64_t  gbm;
+  };
+
+  	br_ckpt_t* CKPT;          // size n_br
 
 	/////////////////////////////////////////////////////////////////////
 	// Private functions.
