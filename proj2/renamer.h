@@ -95,6 +95,7 @@ private:
 	bool al_head_phase, al_tail_phase;
 	bool al_full() const;
 	bool al_empty() const;
+	uint64_t al_occupancy() const;
 
 	/////////////////////////////////////////////////////////////////////
 	// Structure 5: Physical Register File

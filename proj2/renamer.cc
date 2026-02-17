@@ -62,7 +62,6 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
     al_tail = 0;
     al_head_phase = 0;
     al_tail_phase = 0; // same => empty
-}
 
     GBM = 0;
     gbm_mask = (n_br == 64) ? ~0ULL : ((1ULL << n_br) - 1ULL);
@@ -74,6 +73,9 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
     CKPT[i].fl_head_phase = 0;
     CKPT[i].gbm = 0;
     }
+}
+
+
 
 uint64_t renamer::fl_occupancy() const
 {
