@@ -339,7 +339,7 @@ void renamer::clear_ready(uint64_t phys_reg) {
 uint64_t renamer::read(uint64_t phys_reg) { 
     assert(phys_reg < n_phys);
     static int r = 0;
-        if (r < 80) {
+        if (r < 200) {
             fprintf(stderr, "READ: phys=%lu val=0x%lx\n", phys_reg, PRF[phys_reg]);
             fflush(stderr);
             r++;
