@@ -226,6 +226,8 @@ uint64_t renamer::checkpoint()
 
 bool renamer::stall_dispatch(uint64_t bundle_inst)
 {
+    // TEMP DEBUG: treat any bundle > 1 as stall
+    if (bundle_inst > 1) return true;
     return (al_size - al_occupancy()) < bundle_inst;
 }
 
@@ -281,20 +283,16 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
         al_tail_phase = !al_tail_phase;
     }
 
-    static int d_once = 0;
-        if (!d_once) {
-        d_once = 1;
-            fprintf(stderr,
-                    "DISP0: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu "
-                    "dest=%d log=%lu phys=%lu branch=%d load=%d store=%d PC=0x%lx\n",
-                        idx,
-                        al_head, (int)al_head_phase, al_tail, (int)al_tail_phase, al_occupancy(),
-                        (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg,
-                        (int)AL[idx].branch, (int)AL[idx].load, (int)AL[idx].store,
-                        AL[idx].PC
-                    );
-            fflush(stderr);
-        }
+static int d_count = 0;
+if (d_count < 12) {
+  fprintf(stderr,
+    "DISP%02d: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu dest=%d log=%lu phys=%lu PC=0x%lx\n",
+    d_count, idx,
+    al_head, (int)al_head_phase, al_tail, (int)al_tail_phase, al_occupancy(),
+    (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg, AL[idx].PC);
+  fflush(stderr);
+  d_count++;
+}
 
 
     return idx;
@@ -459,13 +457,14 @@ bool renamer::precommit(bool &completed,
 
 void renamer::commit() {
   assert(!al_empty());
+  assert(al_occupancy() < al_size);
 
   AL_entry &e = AL[al_head];
   assert(e.valid);
 
-  static int once = 0;
-  if (!once) {
-    once = 1;
+  static int cmt_count = 0;
+  if (cmt_count < 4) {
+    //once = 1;
     fprintf(stderr,
     "COMMIT0: al_head=%lu/%d al_tail=%lu/%d occ=%lu "
     "dest=%d log=%lu newp=%lu completed=%d AMT[log]=%lu "
@@ -476,6 +475,7 @@ void renamer::commit() {
     fl_head, fl_head_phase, fl_tail, fl_tail_phase, fl_occupancy()
     );
     fflush(stderr);
+    cmt_count++;
   }
 
   assert(e.completed);
