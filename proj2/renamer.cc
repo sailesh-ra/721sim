@@ -386,58 +386,14 @@ void renamer::set_complete(uint64_t AL_index)
         ready[p] = true;
     }
 }
+
 void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
-    // Phase 1: perfect BP, always correct
+    // Phase 1: perfect BP — resolve is always correct, no recovery needed.
+    // Just clear the branch's bit from the GBM and all checkpointed GBMs.
+    assert(branch_ID < n_br);
     uint64_t bit = 1ULL << branch_ID;
     for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
     GBM &= ~bit;
-}
-
-  // mispredict recovery
-  // Restore checkpointed state
-  GBM = CKPT[branch_ID].gbm & gbm_mask;
-  // Ensure mispredicted branch bit is cleared
-  GBM &= ~bit;
-
-  for (uint64_t r = 0; r < n_log; r++) RMT[r] = CKPT[branch_ID].shadow_RMT[r];
-
-  fl_head = CKPT[branch_ID].fl_head;
-  fl_head_phase = CKPT[branch_ID].fl_head_phase;
-  
-  // Invalidate younger AL entries, and set tail to AL_index+1
-
-  // Save old tail (current speculative tail) for invalidation loop
-  uint64_t old_tail = al_tail;
-  bool old_tail_phase = al_tail_phase;
-
-  // restore AL tail to entry after branch; invalidate younger entries
-  uint64_t new_tail = AL_index + 1;
-  if (new_tail >= al_size) new_tail -= al_size;
-
-  // Compute correct phase for new_tail by walking forward from head
-  uint64_t idx = al_head;
-  bool phase = al_head_phase;
-  while (idx != new_tail) {
-      idx++;
-      if (idx == al_size) { idx = 0; phase = !phase; }
-  }
-  bool new_tail_phase = phase;
-
-  // Invalidate entries from new_tail up to old_tail
-  idx = new_tail;
-  phase = new_tail_phase;
-
-  while (!((idx == old_tail) && (phase == old_tail_phase))) {
-    std::memset(&AL[idx], 0, sizeof(AL_entry));
-    // AL[idx].valid = false;
-    idx++;
-    if (idx == al_size) { idx = 0; phase = !phase; }
-  }
-
-    // Finally, set new tail
-    al_tail = new_tail;
-    al_tail_phase = new_tail_phase;
-
 }
 
 bool renamer::precommit(bool &completed,
