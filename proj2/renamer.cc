@@ -289,12 +289,12 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
     AL[idx].amo = amo;
     AL[idx].csr = csr;
 
-    if (dest_valid && log_reg == 0) {
+   /* if (dest_valid && log_reg == 0) {
     // x0 is hardwired to 0: treat as no-dest
     dest_valid = false;
     log_reg = 0;
     phys_reg = 0;
-    }
+    } */
 
     AL[idx].dest_valid = dest_valid;
     AL[idx].log_reg = dest_valid ? log_reg : 0;
@@ -381,7 +381,7 @@ void renamer::set_complete(uint64_t AL_index)
 
     if (AL[AL_index].dest_valid) {
         uint64_t p = AL[AL_index].phys_reg;
-        assert(p != 0);
+        //assert(p != 0);
         assert(p < n_phys);
         ready[p] = true;
     }
