@@ -59,8 +59,8 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     fl_head = 0;
     fl_tail = 0;
-    fl_head_phase = 0;
-    fl_tail_phase = 1; // different => full 
+    fl_head_phase = 1;
+    fl_tail_phase = 0; // different => full 
 
     // Active List allocate + initialize empty
     AL = new AL_entry[al_size];
@@ -594,8 +594,8 @@ void renamer::squash() {
     // Set Free List to "full" state (phase-bit convention)
     fl_head = 0;
     fl_tail = 0;
-    fl_head_phase = 0;
-    fl_tail_phase = 1;   // different -> full
+    fl_head_phase = 1;
+    fl_tail_phase = 0;   // different -> full
 
     // 4) If you have branch state, reset it for squash (Phase-1 safe)
     GBM = 0;
