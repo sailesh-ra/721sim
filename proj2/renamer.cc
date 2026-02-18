@@ -251,7 +251,10 @@ bool renamer::stall_dispatch(uint64_t bundle_inst)
         fflush(stderr);
         k++;
     }
-    return (al_size - al_occupancy()) < bundle_inst;
+    // The simulator may pass a maximum bundle size (e.g., 8) regardless of perf.
+    // In perf=1 bring-up, only allow 1 dispatch per cycle.
+    uint64_t effective = 1;
+    return (al_size - al_occupancy()) < effective;
 }
 
 uint64_t renamer::dispatch_inst(bool dest_valid,
