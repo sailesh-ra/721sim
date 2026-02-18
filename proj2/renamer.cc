@@ -43,7 +43,7 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     PRF[0] = 0;
     ready[0] = true;
-    
+
     // Free List holds only extra physical regs: [n_log .. n_phys -1]
     fl_size = n_phys - n_log;
     FL = new uint64_t[fl_size];
@@ -87,17 +87,18 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
 uint64_t renamer::fl_occupancy() const
 {
-    if (fl_head == fl_tail) {
-        if (fl_head_phase == fl_tail_phase)
-            return 0;               // empty
-        else
-            return fl_size;         // full
-    }
+    if (fl_head == fl_tail)
+        return (fl_head_phase == fl_tail_phase) ? 0 : fl_size;
 
-    if (fl_tail_phase == fl_head_phase)
-        return fl_tail - fl_head;
-    else
-        return fl_size - (fl_head - fl_tail);
+    if (fl_head_phase == fl_tail_phase) {
+        // tail ahead of head in same phase
+        return (fl_tail >= fl_head) ? (fl_tail - fl_head)
+                                    : (fl_size - (fl_head - fl_tail));
+    } else {
+        // head ahead of tail (occupancy is "wrapped")
+        return (fl_head >= fl_tail) ? (fl_size - (fl_head - fl_tail))
+                                    : (fl_tail - fl_head); // should be rare if phases maintained
+    }
 }
 
 bool renamer::al_empty() const
@@ -159,7 +160,7 @@ uint64_t renamer::rename_rsrc(uint64_t log_reg)
 {
 
     assert(log_reg < n_log);
-
+    if (log_reg == 0) return 0;
     return RMT[log_reg];
 }
 
@@ -168,7 +169,7 @@ uint64_t renamer::rename_rdst(uint64_t log_reg)
     assert(log_reg < n_log);
 
     if (log_reg == 0) {
-    // x0 is not renamable; keep it mapped to phys 0
+    // x0: ignore writes
     return 0;
     }
 
@@ -190,6 +191,11 @@ uint64_t renamer::rename_rdst(uint64_t log_reg)
 
     // Dest not ready until producer completes
     ready[p_new] = false;
+
+    assert(RMT[0] == 0);
+    assert(AMT[0] == 0);
+    assert(PRF[0] == 0);
+    assert(ready[0] == true);
     
     return p_new;
 }
@@ -200,11 +206,13 @@ uint64_t renamer::checkpoint()
   for (uint64_t id = 0; id < n_br; id++) {
     uint64_t bit = 1ULL << id;
     if ((inuse & bit) == 0) {
+      uint64_t old_gbm = GBM & gbm_mask;
       GBM |= bit;
 
-      CKPT[id].gbm = GBM & gbm_mask;
+      CKPT[id].gbm = old_gbm;
       CKPT[id].fl_head = fl_head;
       CKPT[id].fl_head_phase = fl_head_phase;
+      
       for (uint64_t r = 0; r < n_log; r++) CKPT[id].shadow_RMT[r] = RMT[r];
 
       return id;
@@ -251,6 +259,13 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
     AL[idx].amo = amo;
     AL[idx].csr = csr;
 
+    if (dest_valid && log_reg == 0) {
+    // x0 is hardwired to 0: treat as no-dest
+    dest_valid = false;
+    log_reg = 0;
+    phys_reg = 0;
+    }
+
     AL[idx].dest_valid = dest_valid;
     AL[idx].log_reg = dest_valid ? log_reg : 0;
     AL[idx].phys_reg = dest_valid ? phys_reg : 0;
@@ -284,14 +299,44 @@ void renamer::set_ready(uint64_t phys_reg) {
 }
 void renamer::write(uint64_t phys_reg, uint64_t value) {
     assert(phys_reg < n_phys);
+    if (phys_reg == 0) {
+
+    PRF[0] = 0;
+    ready[0] = true;
+
+    assert(RMT[0] == 0);
+    assert(AMT[0] == 0);
+    assert(PRF[0] == 0);
+    assert(ready[0] == true);
+
+    return;
+  }
     PRF[phys_reg] = value;
+    ready[phys_reg] = true;
+    //assert(ready[phys_reg] == true);   // if pipeline guarantees set_complete happened first
 }
-void renamer::set_complete(uint64_t AL_index) {
+
+void renamer::set_complete(uint64_t AL_index)
+{
     assert(AL_index < al_size);
+    assert(AL[AL_index].valid);
+
+    assert(AL[AL_index].completed == false);
     AL[AL_index].completed = true;
+
+    if (AL[AL_index].dest_valid) {
+        uint64_t p = AL[AL_index].phys_reg;
+        assert(p != 0);
+        assert(p < n_phys);
+        ready[p] = true;
+    }
 }
 void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
   assert(branch_ID < n_br);
+  assert(AL_index < al_size);
+  assert(AL[AL_index].valid);
+  assert(AL[AL_index].branch);
+
   uint64_t bit = 1ULL << branch_ID;
 
   // clear from all checkpointed GBMs
@@ -304,30 +349,49 @@ void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
   }
 
   // mispredict recovery
+  // Restore checkpointed state
   GBM = CKPT[branch_ID].gbm & gbm_mask;
+  // Ensure mispredicted branch bit is cleared
   GBM &= ~bit;
 
   for (uint64_t r = 0; r < n_log; r++) RMT[r] = CKPT[branch_ID].shadow_RMT[r];
 
   fl_head = CKPT[branch_ID].fl_head;
   fl_head_phase = CKPT[branch_ID].fl_head_phase;
+  
+  // Invalidate younger AL entries, and set tail to AL_index+1
+
+  // Save old tail (current speculative tail) for invalidation loop
+  uint64_t old_tail = al_tail;
+  bool old_tail_phase = al_tail_phase;
 
   // restore AL tail to entry after branch; invalidate younger entries
   uint64_t new_tail = AL_index + 1;
-  bool new_tail_phase = al_head_phase;
   if (new_tail >= al_size) new_tail -= al_size;
-  if (new_tail < al_head) new_tail_phase = !al_head_phase;
 
-  uint64_t idx = new_tail;
-  bool phase = new_tail_phase;
-  while (!((idx == al_tail) && (phase == al_tail_phase))) {
+  // Compute correct phase for new_tail by walking forward from head
+  uint64_t idx = al_head;
+  bool phase = al_head_phase;
+  while (idx != new_tail) {
+      idx++;
+      if (idx == al_size) { idx = 0; phase = !phase; }
+  }
+  bool new_tail_phase = phase;
+
+  // Invalidate entries from new_tail up to old_tail
+  idx = new_tail;
+  phase = new_tail_phase;
+
+  while (!((idx == old_tail) && (phase == old_tail_phase))) {
     AL[idx].valid = false;
     idx++;
     if (idx == al_size) { idx = 0; phase = !phase; }
   }
 
-  al_tail = new_tail;
-  al_tail_phase = new_tail_phase;
+    // Finally, set new tail
+    al_tail = new_tail;
+    al_tail_phase = new_tail_phase;
+
 }
 
 bool renamer::precommit(bool &completed,
@@ -363,58 +427,60 @@ bool renamer::precommit(bool &completed,
 }
 
 void renamer::commit() {
+  assert(!al_empty());
 
-    // Must have something to commit
-    assert(!al_empty());
+  AL_entry &e = AL[al_head];
+  assert(e.valid);
 
-    AL_entry &e = AL[al_head];
+  assert(e.completed);
+  assert(!e.exception);
+  assert(!e.load_viol);
 
-    // Commit should only be called when instruction is ready to retire
-    assert(e.completed);
-    assert(!e.exception);
-    assert(!e.load_viol);
+  if (e.dest_valid) {
+    uint64_t log  = e.log_reg;
+    uint64_t newp = e.phys_reg;
 
-    // In Phase-1 perfect BP, these should not be set (but don't assume)
-    // assert(!e.br_misp);
-    // assert(!e.val_misp);
+    assert(log < n_log);
+    assert(newp < n_phys);
 
-    // If instruction has a destination register, update AMT and free old mapping
-    if (e.dest_valid) {
-        uint64_t log = e.log_reg;
-        uint64_t newp = e.phys_reg;
+    if (log != 0) { 
+      uint64_t oldp = AMT[log];
+      assert(oldp < n_phys);
+      assert(oldp < n_log);
+      assert(oldp != 0);
 
-        assert(log < n_log);
-        assert(newp < n_phys);
+      // FL must not be full
+      assert(fl_occupancy() < fl_size);
 
-        uint64_t oldp = AMT[log];
+      // push old committed phys reg
+      FL[fl_tail] = oldp;
+      fl_tail++;
+      if (fl_tail == fl_size) {
+        fl_tail = 0;
+        fl_tail_phase = !fl_tail_phase;
+      }
 
-        // oldp must be a valid physical reg
-        assert(oldp < n_phys);
-
-        // Free list must have space to push oldp (should always, but assert)
-        assert(!(fl_head == fl_tail && fl_head_phase != fl_tail_phase)); // not full
-
-        // Push old committed mapping onto Free List tail
-        FL[fl_tail] = oldp;
-        fl_tail++;
-        if (fl_tail == fl_size) {
-            fl_tail = 0;
-            fl_tail_phase = !fl_tail_phase;
-        }
-
-        // Update committed mapping
-        AMT[log] = newp;
+      AMT[log] = newp;
     }
+  }
 
-    // Pop Active List head
-    e.valid = false; // optional but useful for debugging
+  // ALWAYS retire the head entry
+  e.valid = false;
 
-    al_head++;
-    if (al_head == al_size) {
-        al_head = 0;
-        al_head_phase = !al_head_phase;
-    }
+  al_head++;
+  if (al_head == al_size) {
+    al_head = 0;
+    al_head_phase = !al_head_phase;
+  }
+
+  // x0 invariants
+  assert(RMT[0] == 0);
+  assert(AMT[0] == 0);
+  assert(PRF[0] == 0);
+  assert(ready[0] == true);
+
 }
+
 void renamer::squash() {
     // 1) Empty Active List
     for (uint64_t i = 0; i < al_size; i++) {
@@ -432,8 +498,9 @@ void renamer::squash() {
 
     // 3) Rebuild Free List from AMT mappings:
     //    Mark phys regs referenced by AMT as "used".
-    bool *used = new bool[n_phys];
-    for (uint64_t p = 0; p < n_phys; p++) used[p] = false;
+    // bool *used = new bool[n_phys];
+    std::vector<bool> used(n_phys, false); // std::vector<char> used(n_phys, 0);
+
 
     for (uint64_t r = 0; r < n_log; r++) {
         uint64_t p = AMT[r];
@@ -458,12 +525,16 @@ void renamer::squash() {
     fl_head_phase = 0;
     fl_tail_phase = 1;   // different -> full
 
-    delete[] used;
-
     // 4) If you have branch state, reset it for squash (Phase-1 safe)
     GBM = 0;
     for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm = 0;
+
+    assert(RMT[0] == 0);
+    assert(AMT[0] == 0);
+    assert(PRF[0] == 0);
+    assert(ready[0] == true);
 }
+
 void renamer::set_exception(uint64_t AL_index) { AL[AL_index].exception = true; }
 void renamer::set_load_violation(uint64_t AL_index) { AL[AL_index].load_viol = true; }
 void renamer::set_branch_misprediction(uint64_t AL_index) { AL[AL_index].br_misp = true; }
