@@ -178,6 +178,8 @@ uint64_t renamer::get_branch_mask()
 
 uint64_t renamer::rename_rsrc(uint64_t log_reg)
 {
+    fprintf(stderr, "RENAME_RSRC: log=%lu -> phys=%lu\n", log_reg, RMT[log_reg]);
+    fflush(stderr);
 
     assert(log_reg < n_log);
     if (log_reg == 0) return 0;
@@ -347,10 +349,12 @@ uint64_t renamer::read(uint64_t phys_reg) {
     return PRF[phys_reg];
 }
 void renamer::set_ready(uint64_t phys_reg) {
+    fprintf(stderr, "SET_READY called\n"); fflush(stderr);
     assert(phys_reg < n_phys);
     ready[phys_reg] = true; 
 }
 void renamer::write(uint64_t phys_reg, uint64_t value) {
+    fprintf(stderr, "WRITE called\n"); fflush(stderr);
     assert(phys_reg < n_phys);
     static int w = 0;
         if (w < 70) {
@@ -377,6 +381,7 @@ void renamer::write(uint64_t phys_reg, uint64_t value) {
 
 void renamer::set_complete(uint64_t AL_index)
 {
+    fprintf(stderr, "SET_COMPLETE called\n"); fflush(stderr);
     assert(AL_index < al_size);
     assert(AL[AL_index].valid);
 
@@ -407,6 +412,7 @@ void renamer::set_complete(uint64_t AL_index)
 void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
     // Phase 1: perfect BP — resolve is always correct, no recovery needed.
     // Just clear the branch's bit from the GBM and all checkpointed GBMs.
+    fprintf(stderr, "RESOLVE called\n"); fflush(stderr);
     assert(branch_ID < n_br);
     uint64_t bit = 1ULL << branch_ID;
     for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
@@ -420,10 +426,15 @@ bool renamer::precommit(bool &completed,
 {
 
     if (al_empty()) {
+        fprintf(stderr, "PRECOMMIT: AL empty, returning false\n");
+        fflush(stderr);
         return false;
     }
 
     const AL_entry &e = AL[al_head];
+    fprintf(stderr, "PRECOMMIT: head=%lu PC=0x%lx completed=%d dest=%d\n",
+        al_head, e.PC, (int)e.completed, (int)e.dest_valid);
+    fflush(stderr);
 
     // If you keep valid bits, This should hold when not empty:
     // assert(e.valid);
@@ -448,6 +459,7 @@ bool renamer::precommit(bool &completed,
 void renamer::commit() {
   assert(!al_empty());
   assert(al_occupancy() < al_size);
+  fprintf(stderr, "COMMIT called\n"); fflush(stderr);
 
   AL_entry e = AL[al_head];
   assert(e.valid);
@@ -503,12 +515,12 @@ void renamer::commit() {
   // ALWAYS retire the head entry
   std::memset(&AL[al_head], 0, sizeof(AL_entry));
 
-  fprintf(stderr, "POST-COMMIT: checking PRF state\n");
+  /*fprintf(stderr, "POST-COMMIT: checking PRF state\n");
     for (uint64_t r = 0; r < n_log; r++) {
         fprintf(stderr, "  AMT[%lu]=%lu PRF[AMT[%lu]]=%lu ready=%d\n",
             r, AMT[r], r, PRF[AMT[r]], (int)ready[AMT[r]]);
         }
-    fflush(stderr);
+    fflush(stderr);*/
 
   al_head++;
   if (al_head == al_size) {
@@ -525,6 +537,7 @@ void renamer::commit() {
 }
 
 void renamer::squash() {
+    fprintf(stderr, "SQUASH called\n"); fflush(stderr);
     // 1) Empty Active List
     for (uint64_t i = 0; i < al_size; i++) {
        std::memset(&AL[i], 0, sizeof(AL_entry)); //AL[i].valid = false;   // for debugging
@@ -587,6 +600,8 @@ void renamer::set_branch_misprediction(uint64_t AL_index) { AL[AL_index].br_misp
 void renamer::set_value_misprediction(uint64_t AL_index) { AL[AL_index].val_misp = true; }
 bool renamer::get_exception(uint64_t AL_index) { 
     
+    fprintf(stderr, "GET_EXCEPTION: idx=%lu = %d\n", AL_index, AL[AL_index].exception);
+    fflush(stderr);
     assert(AL_index < al_size);
     return AL[AL_index].exception;
 
