@@ -341,6 +341,12 @@ void renamer::set_ready(uint64_t phys_reg) {
 }
 void renamer::write(uint64_t phys_reg, uint64_t value) {
     assert(phys_reg < n_phys);
+    static int w = 0;
+        if (w < 70) {
+            fprintf(stderr, "WRITE: phys=%lu val=0x%lx\n", phys_reg, value);
+            fflush(stderr);
+            w++;
+        }
     if (phys_reg == 0) {
 
     PRF[0] = 0;
