@@ -281,6 +281,22 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
         al_tail_phase = !al_tail_phase;
     }
 
+    static int d_once = 0;
+        if (!d_once) {
+        d_once = 1;
+            fprintf(stderr,
+                    "DISP0: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu "
+                    "dest=%d log=%lu phys=%lu branch=%d load=%d store=%d PC=0x%lx\n",
+                        idx,
+                        al_head, (int)al_head_phase, al_tail, (int)al_tail_phase, al_occupancy(),
+                        (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg,
+                        (int)AL[idx].branch, (int)AL[idx].load, (int)AL[idx].store,
+                        AL[idx].PC
+                    );
+            fflush(stderr);
+        }
+
+
     return idx;
 }
 bool renamer::is_ready(uint64_t phys_reg) { 
@@ -325,6 +341,19 @@ void renamer::set_complete(uint64_t AL_index)
 
     assert(AL[AL_index].completed == false);
     AL[AL_index].completed = true;
+
+    static int c_once = 0;
+    if (!c_once) {
+      c_once = 1;
+        fprintf(stderr,
+          "COMP0: AL_index=%lu valid=%d dest=%d log=%lu phys=%lu ready=%d\n",
+            AL_index, (int)AL[AL_index].valid,
+            (int)AL[AL_index].dest_valid, AL[AL_index].log_reg, AL[AL_index].phys_reg,
+            (AL[AL_index].dest_valid ? (int)ready[AL[AL_index].phys_reg] : -1)
+            );
+        fflush(stderr);
+      }
+
 
     if (AL[AL_index].dest_valid) {
         uint64_t p = AL[AL_index].phys_reg;
