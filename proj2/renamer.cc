@@ -486,6 +486,13 @@ void renamer::commit() {
   // ALWAYS retire the head entry
   std::memset(&AL[al_head], 0, sizeof(AL_entry));
 
+  fprintf(stderr, "POST-COMMIT: checking PRF state\n");
+    for (uint64_t r = 0; r < n_log; r++) {
+        fprintf(stderr, "  AMT[%lu]=%lu PRF[AMT[%lu]]=%lu ready=%d\n",
+            r, AMT[r], r, PRF[AMT[r]], (int)ready[AMT[r]]);
+        }
+    fflush(stderr);
+
   al_head++;
   if (al_head == al_size) {
     al_head = 0;
