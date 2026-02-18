@@ -141,15 +141,32 @@ renamer::~renamer() {
 
 bool renamer::stall_reg(uint64_t bundle_dst)
 {
+    static int k = 0;
+    if (k < 50) {
+        fprintf(stderr, "STALL_REG[%02d] bundle=%lu fl_occ=%lu head=%lu/%d tail=%lu/%d\n",
+            k, bundle_dst, fl_occupancy(),
+            fl_head, (int)fl_head_phase, fl_tail, (int)fl_tail_phase);
+        fflush(stderr);
+        k++;
+    }
+
     return fl_occupancy() < bundle_dst;
 }
 
 bool renamer::stall_branch(uint64_t bundle_branch)
 {
+    static int k = 0;
+    uint64_t used = (uint64_t)__builtin_popcountll((unsigned long long)(GBM & gbm_mask));
+    uint64_t free = n_br - used;
 
-  uint64_t used = (uint64_t)__builtin_popcountll((unsigned long long)(GBM & gbm_mask));
-  uint64_t free = n_br - used;
-  return free < bundle_branch;
+    if (k < 50) {
+        fprintf(stderr, "STALL_BR[%02d] bundle=%lu GBM=0x%lx used=%lu free=%lu\n",
+            k, bundle_branch, GBM, used, free);
+        fflush(stderr);
+        k++;
+    }
+
+    return free < bundle_branch;
 
 }
 
@@ -226,8 +243,14 @@ uint64_t renamer::checkpoint()
 
 bool renamer::stall_dispatch(uint64_t bundle_inst)
 {
-    // TEMP DEBUG: treat any bundle > 1 as stall
-    if (bundle_inst > 1) return true;
+    static int k = 0;
+    if (k < 50) {
+        fprintf(stderr, "STALL_DISP[%02d] bundle=%lu freeAL=%lu occAL=%lu head=%lu/%d tail=%lu/%d\n",
+            k, bundle_inst, (al_size - al_occupancy()), al_occupancy(),
+            al_head, (int)al_head_phase, al_tail, (int)al_tail_phase);
+        fflush(stderr);
+        k++;
+    }
     return (al_size - al_occupancy()) < bundle_inst;
 }
 
