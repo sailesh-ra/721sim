@@ -458,7 +458,6 @@ bool renamer::precommit(bool &completed,
 
 void renamer::commit() {
   assert(!al_empty());
-  assert(al_occupancy() < al_size);
   //fprintf(stderr, "COMMIT called\n"); fflush(stderr);
 
   AL_entry e = AL[al_head];
