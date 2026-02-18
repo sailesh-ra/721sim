@@ -313,10 +313,10 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
 static int d_count = 0;
 if (d_count < 12) {
   fprintf(stderr,
-    "DISP%02d: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu dest=%d log=%lu phys=%lu PC=0x%lx\n",
+    "DISP%02d: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu dest=%d log=%lu phys=%lu PC=0x%lx,load=%d store=%d br=%d amo=%d csr=%d\n",
     d_count, idx,
     al_head, (int)al_head_phase, al_tail, (int)al_tail_phase, al_occupancy(),
-    (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg, AL[idx].PC);
+    (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg, AL[idx].PC,load, store, branch, amo, csr);
   fflush(stderr);
   d_count++;
 }
