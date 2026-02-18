@@ -4,6 +4,7 @@
 #include <cstring>
 #include <vector>
 #include <cstdio>
+#include <cstring>
 
 renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
                  uint64_t n_branches, uint64_t n_active)
@@ -438,7 +439,8 @@ void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
   phase = new_tail_phase;
 
   while (!((idx == old_tail) && (phase == old_tail_phase))) {
-    AL[idx].valid = false;
+    std::memset(&AL[idx], 0, sizeof(AL_entry));
+    // AL[idx].valid = false;
     idx++;
     if (idx == al_size) { idx = 0; phase = !phase; }
   }
@@ -486,7 +488,8 @@ void renamer::commit() {
   assert(al_occupancy() < al_size);
 
   AL_entry &e = AL[al_head];
-  assert(e.valid);
+  std::memset(&AL[al_head], 0, sizeof(AL_entry));
+  //assert(e.valid);
 
   static int cmt_count = 0;
   if (cmt_count < 4) {
@@ -556,7 +559,7 @@ void renamer::commit() {
 void renamer::squash() {
     // 1) Empty Active List
     for (uint64_t i = 0; i < al_size; i++) {
-        AL[i].valid = false;   // for debugging
+       std::memset(&AL[i], 0, sizeof(AL_entry)); //AL[i].valid = false;   // for debugging
     }
     al_head = 0;
     al_tail = 0;
