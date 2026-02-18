@@ -187,6 +187,7 @@ uint64_t renamer::rename_rsrc(uint64_t log_reg)
 uint64_t renamer::rename_rdst(uint64_t log_reg)
 {
     assert(log_reg < n_log);
+    fprintf(stderr, "RENAME_RDST: log=%lu -> phys=%lu\n", log_reg, /* phys after alloc */);
 
     if (log_reg == 0) {
     // x0: ignore writes
@@ -333,6 +334,12 @@ void renamer::clear_ready(uint64_t phys_reg) {
 }
 uint64_t renamer::read(uint64_t phys_reg) { 
     assert(phys_reg < n_phys);
+    static int r = 0;
+        if (r < 80) {
+            fprintf(stderr, "READ: phys=%lu val=0x%lx\n", phys_reg, PRF[phys_reg]);
+            fflush(stderr);
+            r++;
+        }
     return PRF[phys_reg];
 }
 void renamer::set_ready(uint64_t phys_reg) {
