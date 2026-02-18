@@ -36,7 +36,7 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     for(uint64_t p = 0; p < n_phys; p++) {
         PRF[p] = 0;
-        ready[p] = (p < n_log); // default: not ready
+        ready[p] = true; // default: all ready
     }
 
     for(uint64_t p = 0; p < n_log; p++) {
@@ -596,6 +596,9 @@ void renamer::squash() {
     fl_tail = 0;
     fl_head_phase = 1;
     fl_tail_phase = 0;   // different -> full
+
+    for (uint64_t p = 0; p < n_phys; p++) ready[p] = true;
+    ready[0] = true;
 
     // 4) If you have branch state, reset it for squash (Phase-1 safe)
     GBM = 0;
