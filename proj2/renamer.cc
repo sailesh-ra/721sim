@@ -487,9 +487,8 @@ void renamer::commit() {
   assert(!al_empty());
   assert(al_occupancy() < al_size);
 
-  AL_entry &e = AL[al_head];
-  std::memset(&AL[al_head], 0, sizeof(AL_entry));
-  //assert(e.valid);
+  AL_entry e = AL[al_head];
+  assert(e.valid);
 
   static int cmt_count = 0;
   if (cmt_count < 4) {
@@ -540,7 +539,7 @@ void renamer::commit() {
   }
 
   // ALWAYS retire the head entry
-  e.valid = false;
+  std::memset(&AL[al_head], 0, sizeof(AL_entry));
 
   al_head++;
   if (al_head == al_size) {
