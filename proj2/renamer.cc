@@ -142,30 +142,30 @@ renamer::~renamer() {
 
 bool renamer::stall_reg(uint64_t bundle_dst)
 {
-    static int k = 0;
+    /* static int k = 0;
     if (k < 50) {
         fprintf(stderr, "STALL_REG[%02d] bundle=%lu fl_occ=%lu head=%lu/%d tail=%lu/%d\n",
             k, bundle_dst, fl_occupancy(),
             fl_head, (int)fl_head_phase, fl_tail, (int)fl_tail_phase);
         fflush(stderr);
         k++;
-    }
+    } */
 
     return fl_occupancy() < bundle_dst;
 }
 
 bool renamer::stall_branch(uint64_t bundle_branch)
 {
-    static int k = 0;
+  //  static int k = 0;
     uint64_t used = (uint64_t)__builtin_popcountll((unsigned long long)(GBM & gbm_mask));
     uint64_t free = n_br - used;
 
-    if (k < 50) {
+   /* if (k < 50) {
         fprintf(stderr, "STALL_BR[%02d] bundle=%lu GBM=0x%lx used=%lu free=%lu\n",
             k, bundle_branch, GBM, used, free);
         fflush(stderr);
         k++;
-    }
+    } */
 
     return free < bundle_branch;
 
@@ -178,8 +178,8 @@ uint64_t renamer::get_branch_mask()
 
 uint64_t renamer::rename_rsrc(uint64_t log_reg)
 {
-    fprintf(stderr, "RENAME_RSRC: log=%lu -> phys=%lu\n", log_reg, RMT[log_reg]);
-    fflush(stderr);
+   // fprintf(stderr, "RENAME_RSRC: log=%lu -> phys=%lu\n", log_reg, RMT[log_reg]);
+   // fflush(stderr);
 
     assert(log_reg < n_log);
     if (log_reg == 0) return 0;
@@ -192,8 +192,8 @@ uint64_t renamer::rename_rdst(uint64_t log_reg)
 
     if (log_reg == 0) {
     // x0: ignore writes
-    fprintf(stderr, "RENAME_RDST: log=0 -> phys=0 (x0 hardwired)\n");
-    fflush(stderr);
+   // fprintf(stderr, "RENAME_RDST: log=0 -> phys=0 (x0 hardwired)\n");
+   // fflush(stderr);
     return 0;
     }
 
@@ -216,8 +216,8 @@ uint64_t renamer::rename_rdst(uint64_t log_reg)
     // Dest not ready until producer completes
     ready[p_new] = false;
 
-    fprintf(stderr, "RENAME_RDST: log=%lu -> phys=%lu\n", log_reg, p_new);
-    fflush(stderr);
+   // fprintf(stderr, "RENAME_RDST: log=%lu -> phys=%lu\n", log_reg, p_new);
+   // fflush(stderr);
 
     assert(RMT[0] == 0);
     assert(AMT[0] == 0);
@@ -251,14 +251,14 @@ uint64_t renamer::checkpoint()
 
 bool renamer::stall_dispatch(uint64_t bundle_inst)
 {
-    static int k = 0;
+    /*static int k = 0;
     if (k < 50) {
         fprintf(stderr, "STALL_DISP[%02d] bundle=%lu freeAL=%lu occAL=%lu head=%lu/%d tail=%lu/%d\n",
             k, bundle_inst, (al_size - al_occupancy()), al_occupancy(),
             al_head, (int)al_head_phase, al_tail, (int)al_tail_phase);
         fflush(stderr);
         k++;
-    }
+    } */
     // The simulator may pass a maximum bundle size (e.g., 8) regardless of perf.
     //uint64_t effective = 1;
     return (al_size - al_occupancy()) < bundle_inst;
@@ -316,16 +316,16 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
         al_tail_phase = !al_tail_phase;
     }
 
-static int d_count = 0;
+/*static int d_count = 0;
 if (d_count < 12) {
   fprintf(stderr,
     "DISP%02d: idx=%lu al_head=%lu/%d al_tail=%lu/%d occ=%lu dest=%d log=%lu phys=%lu PC=0x%lx,load=%d store=%d br=%d amo=%d csr=%d\n",
     d_count, idx,
     al_head, (int)al_head_phase, al_tail, (int)al_tail_phase, al_occupancy(),
     (int)AL[idx].dest_valid, AL[idx].log_reg, AL[idx].phys_reg, AL[idx].PC,load, store, branch, amo, csr);
-  fflush(stderr);
+  fflush(stderr); 
   d_count++;
-}
+} */
 
 
     return idx;
@@ -340,28 +340,28 @@ void renamer::clear_ready(uint64_t phys_reg) {
 }
 uint64_t renamer::read(uint64_t phys_reg) { 
     assert(phys_reg < n_phys);
-    static int r = 0;
+   /* static int r = 0;
         if (r < 200) {
             fprintf(stderr, "READ: phys=%lu val=0x%lx\n", phys_reg, PRF[phys_reg]);
             fflush(stderr);
             r++;
-        }
+        } */
     return PRF[phys_reg];
 }
 void renamer::set_ready(uint64_t phys_reg) {
-    fprintf(stderr, "SET_READY called\n"); fflush(stderr);
+   // fprintf(stderr, "SET_READY called\n"); fflush(stderr);
     assert(phys_reg < n_phys);
     ready[phys_reg] = true; 
 }
 void renamer::write(uint64_t phys_reg, uint64_t value) {
-    fprintf(stderr, "WRITE called\n"); fflush(stderr);
+   // fprintf(stderr, "WRITE called\n"); fflush(stderr);
     assert(phys_reg < n_phys);
-    static int w = 0;
+    /*static int w = 0;
         if (w < 70) {
             fprintf(stderr, "WRITE: phys=%lu val=0x%lx\n", phys_reg, value);
             fflush(stderr);
             w++;
-        }
+        } */
     if (phys_reg == 0) {
 
     PRF[0] = 0;
@@ -381,24 +381,24 @@ void renamer::write(uint64_t phys_reg, uint64_t value) {
 
 void renamer::set_complete(uint64_t AL_index)
 {
-    fprintf(stderr, "SET_COMPLETE called\n"); fflush(stderr);
+    //fprintf(stderr, "SET_COMPLETE called\n"); fflush(stderr);
     assert(AL_index < al_size);
     assert(AL[AL_index].valid);
 
     assert(AL[AL_index].completed == false);
     AL[AL_index].completed = true;
 
-    static int c_once = 0;
+    /* static int c_once = 0;
     if (!c_once) {
       c_once = 1;
-        fprintf(stderr,
+       fprintf(stderr,
           "COMP0: AL_index=%lu valid=%d dest=%d log=%lu phys=%lu ready=%d\n",
             AL_index, (int)AL[AL_index].valid,
             (int)AL[AL_index].dest_valid, AL[AL_index].log_reg, AL[AL_index].phys_reg,
             (AL[AL_index].dest_valid ? (int)ready[AL[AL_index].phys_reg] : -1)
             );
         fflush(stderr);
-      }
+      }*/
 
 
     if (AL[AL_index].dest_valid) {
@@ -412,7 +412,7 @@ void renamer::set_complete(uint64_t AL_index)
 void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
     // Phase 1: perfect BP — resolve is always correct, no recovery needed.
     // Just clear the branch's bit from the GBM and all checkpointed GBMs.
-    fprintf(stderr, "RESOLVE called\n"); fflush(stderr);
+   // fprintf(stderr, "RESOLVE called\n"); fflush(stderr);
     assert(branch_ID < n_br);
     uint64_t bit = 1ULL << branch_ID;
     for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
@@ -425,16 +425,16 @@ bool renamer::precommit(bool &completed,
                         uint64_t &PC)
 {
 
-    if (al_empty()) {
-        fprintf(stderr, "PRECOMMIT: AL empty, returning false\n");
-        fflush(stderr);
-        return false;
-    }
+    //if (al_empty()) {
+      //  fprintf(stderr, "PRECOMMIT: AL empty, returning false\n");
+      //  fflush(stderr);
+      //  return false;
+   // }
 
     const AL_entry &e = AL[al_head];
-    fprintf(stderr, "PRECOMMIT: head=%lu PC=0x%lx completed=%d dest=%d\n",
-        al_head, e.PC, (int)e.completed, (int)e.dest_valid);
-    fflush(stderr);
+    //fprintf(stderr, "PRECOMMIT: head=%lu PC=0x%lx completed=%d dest=%d\n",
+      //  al_head, e.PC, (int)e.completed, (int)e.dest_valid);
+    // fflush(stderr);
 
     // If you keep valid bits, This should hold when not empty:
     // assert(e.valid);
@@ -459,12 +459,12 @@ bool renamer::precommit(bool &completed,
 void renamer::commit() {
   assert(!al_empty());
   assert(al_occupancy() < al_size);
-  fprintf(stderr, "COMMIT called\n"); fflush(stderr);
+  //fprintf(stderr, "COMMIT called\n"); fflush(stderr);
 
   AL_entry e = AL[al_head];
   assert(e.valid);
 
-  static int cmt_count = 0;
+ /* static int cmt_count = 0;
   if (cmt_count < 4) {
     //once = 1;
     fprintf(stderr,
@@ -478,7 +478,7 @@ void renamer::commit() {
     );
     fflush(stderr);
     cmt_count++;
-  }
+  } */
 
   assert(e.completed);
   assert(!e.exception);
@@ -537,7 +537,7 @@ void renamer::commit() {
 }
 
 void renamer::squash() {
-    fprintf(stderr, "SQUASH called\n"); fflush(stderr);
+    //fprintf(stderr, "SQUASH called\n"); fflush(stderr);
     // 1) Empty Active List
     for (uint64_t i = 0; i < al_size; i++) {
        std::memset(&AL[i], 0, sizeof(AL_entry)); //AL[i].valid = false;   // for debugging
@@ -600,8 +600,8 @@ void renamer::set_branch_misprediction(uint64_t AL_index) { AL[AL_index].br_misp
 void renamer::set_value_misprediction(uint64_t AL_index) { AL[AL_index].val_misp = true; }
 bool renamer::get_exception(uint64_t AL_index) { 
     
-    fprintf(stderr, "GET_EXCEPTION: idx=%lu = %d\n", AL_index, AL[AL_index].exception);
-    fflush(stderr);
+    //fprintf(stderr, "GET_EXCEPTION: idx=%lu = %d\n", AL_index, AL[AL_index].exception);
+    //fflush(stderr);
     assert(AL_index < al_size);
     return AL[AL_index].exception;
 
