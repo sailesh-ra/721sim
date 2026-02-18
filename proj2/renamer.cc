@@ -433,6 +433,21 @@ void renamer::commit() {
   AL_entry &e = AL[al_head];
   assert(e.valid);
 
+  static int once = 0;
+  if (!once) {
+    once = 1;
+    fprintf(stderr,
+    "COMMIT0: al_head=%lu/%d al_tail=%lu/%d occ=%lu "
+    "dest=%d log=%lu newp=%lu completed=%d AMT[log]=%lu "
+    "FL head=%lu/%d tail=%lu/%d fl_occ=%lu\n",
+    al_head, al_head_phase, al_tail, al_tail_phase, al_occupancy(),
+    e.dest_valid, e.log_reg, e.phys_reg, e.completed,
+    (e.dest_valid ? AMT[e.log_reg] : 999999UL),
+    fl_head, fl_head_phase, fl_tail, fl_tail_phase, fl_occupancy()
+    );
+    fflush(stderr);
+  }
+
   assert(e.completed);
   assert(!e.exception);
   assert(!e.load_viol);
