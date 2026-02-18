@@ -447,19 +447,19 @@ void renamer::commit() {
     if (log != 0) { 
       uint64_t oldp = AMT[log];
       assert(oldp < n_phys);
-      assert(oldp < n_log);
-      assert(oldp != 0);
+      //assert(oldp < n_log);
+      //assert(oldp != 0);
 
       // FL must not be full
+      if (oldp != newp) {
       assert(fl_occupancy() < fl_size);
-
-      // push old committed phys reg
       FL[fl_tail] = oldp;
       fl_tail++;
       if (fl_tail == fl_size) {
-        fl_tail = 0;
-        fl_tail_phase = !fl_tail_phase;
-      }
+          fl_tail = 0;
+          fl_tail_phase = !fl_tail_phase;
+        }
+    }
 
       AMT[log] = newp;
     }
