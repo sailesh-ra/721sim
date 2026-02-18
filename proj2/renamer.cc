@@ -2,6 +2,7 @@
 #include "renamer.h"
 #include <cassert>
 #include <cstring>
+#include <vector>
 
 renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
                  uint64_t n_branches, uint64_t n_active)
