@@ -60,8 +60,8 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     fl_head = 0;
     fl_tail = 0;
-    fl_head_phase = 1;
-    fl_tail_phase = 0; // different => full 
+    fl_head_phase = 0;
+    fl_tail_phase = 1; // different => full 
 
     // Active List allocate + initialize empty
     AL = new AL_entry[al_size];
@@ -71,8 +71,8 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     al_head = 0;
     al_tail = 0;
-    al_head_phase = 1;
-    al_tail_phase = 1; // same => empty
+    al_head_phase = 0;
+    al_tail_phase = 0; // same => empty
 
     GBM = 0;
     gbm_mask = (n_br == 64) ? ~0ULL : ((1ULL << n_br) - 1ULL);
@@ -562,8 +562,8 @@ void renamer::squash() {
     }
     al_head = 0;
     al_tail = 0;
-    al_head_phase = 1;
-    al_tail_phase = 1; // same => empty
+    al_head_phase = 0;
+    al_tail_phase = 0; // same => empty
 
     // 2) Restore RMT = AMT (committed state)
     for (uint64_t r = 0; r < n_log; r++) {
@@ -596,8 +596,8 @@ void renamer::squash() {
     // Set Free List to "full" state (phase-bit convention)
     fl_head = 0;
     fl_tail = 0;
-    fl_head_phase = 1;
-    fl_tail_phase = 0;   // different -> full
+    fl_head_phase = 0;
+    fl_tail_phase = 1;   // different -> full
 
     for (uint64_t p = 0; p < n_phys; p++) ready[p] = true;
     ready[0] = true;
