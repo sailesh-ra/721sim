@@ -313,7 +313,7 @@ void renamer::write(uint64_t phys_reg, uint64_t value) {
     return;
   }
     PRF[phys_reg] = value;
-    ready[phys_reg] = true;
+    //ready[phys_reg] = true;
     //assert(ready[phys_reg] == true);   // if pipeline guarantees set_complete happened first
 }
 
