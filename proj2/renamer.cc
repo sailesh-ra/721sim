@@ -37,7 +37,7 @@ renamer::renamer(uint64_t n_log_regs, uint64_t n_phys_regs,
 
     for(uint64_t p = 0; p < n_phys; p++) {
         PRF[p] = 0;
-        ready[p] = true; // default: all ready
+        ready[p] = (p < n_log); // default: not ready
     }
 
     for(uint64_t p = 0; p < n_log; p++) {
@@ -253,9 +253,8 @@ bool renamer::stall_dispatch(uint64_t bundle_inst)
         k++;
     }
     // The simulator may pass a maximum bundle size (e.g., 8) regardless of perf.
-    // In perf=1 bring-up, only allow 1 dispatch per cycle.
-    uint64_t effective = 1;
-    return (al_size - al_occupancy()) < effective;
+    //uint64_t effective = 1;
+    return (al_size - al_occupancy()) < bundle_inst;
 }
 
 uint64_t renamer::dispatch_inst(bool dest_valid,
@@ -290,12 +289,12 @@ uint64_t renamer::dispatch_inst(bool dest_valid,
     AL[idx].amo = amo;
     AL[idx].csr = csr;
 
-   /* if (dest_valid && log_reg == 0) {
+   if (dest_valid && log_reg == 0) {
     // x0 is hardwired to 0: treat as no-dest
     dest_valid = false;
     log_reg = 0;
     phys_reg = 0;
-    } */
+    }
 
     AL[idx].dest_valid = dest_valid;
     AL[idx].log_reg = dest_valid ? log_reg : 0;
@@ -388,21 +387,11 @@ void renamer::set_complete(uint64_t AL_index)
     }
 }
 void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
-  assert(branch_ID < n_br);
-  assert(AL_index < al_size);
-  assert(AL[AL_index].valid);
-  assert(AL[AL_index].branch);
-
-  uint64_t bit = 1ULL << branch_ID;
-
-  // clear from all checkpointed GBMs
-  for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
-
-  if (correct) {
+    // Phase 1: perfect BP, always correct
+    uint64_t bit = 1ULL << branch_ID;
+    for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
     GBM &= ~bit;
-    GBM &= gbm_mask;
-    return;
-  }
+}
 
   // mispredict recovery
   // Restore checkpointed state
@@ -599,8 +588,8 @@ void renamer::squash() {
     fl_head_phase = 0;
     fl_tail_phase = 1;   // different -> full
 
-    for (uint64_t p = 0; p < n_phys; p++) ready[p] = true;
-    ready[0] = true;
+   // for (uint64_t p = 0; p < n_phys; p++) ready[p] = true;
+   // ready[0] = true;
 
     // 4) If you have branch state, reset it for squash (Phase-1 safe)
     GBM = 0;
