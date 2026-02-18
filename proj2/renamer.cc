@@ -187,10 +187,11 @@ uint64_t renamer::rename_rsrc(uint64_t log_reg)
 uint64_t renamer::rename_rdst(uint64_t log_reg)
 {
     assert(log_reg < n_log);
-    fprintf(stderr, "RENAME_RDST: log=%lu -> phys=%lu\n", log_reg, /* phys after alloc */);
 
     if (log_reg == 0) {
     // x0: ignore writes
+    fprintf(stderr, "RENAME_RDST: log=0 -> phys=0 (x0 hardwired)\n");
+    fflush(stderr);
     return 0;
     }
 
@@ -212,6 +213,9 @@ uint64_t renamer::rename_rdst(uint64_t log_reg)
 
     // Dest not ready until producer completes
     ready[p_new] = false;
+
+    fprintf(stderr, "RENAME_RDST: log=%lu -> phys=%lu\n", log_reg, p_new);
+    fflush(stderr);
 
     assert(RMT[0] == 0);
     assert(AMT[0] == 0);
