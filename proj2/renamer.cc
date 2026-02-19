@@ -415,8 +415,46 @@ void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
    // fprintf(stderr, "RESOLVE called\n"); fflush(stderr);
     assert(branch_ID < n_br);
     uint64_t bit = 1ULL << branch_ID;
-    for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
-    GBM &= ~bit;
+    if(correct){
+        GBM &= ~bit;
+        for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
+    } else {
+        // 1. Restore GBM from checkpoint, then clear this branch's own bit
+        GBM = CKPT[branch_ID].gbm & ~bit;
+
+        // 2. Restore shadow RMT
+        for (uint64_t r = 0; r < n_log; r++)
+            RMT[r] = CKPT[branch_ID].shadow_RMT[r];
+        
+        // 3. Restore free list head
+        fl_head       = CKPT[branch_ID].fl_head;
+        fl_head_phase = CKPT[branch_ID].fl_head_phase;
+
+        // 4. Restore active list tail to entry just after the branch
+        uint64_t new_tail = AL_index + 1;
+        if (new_tail == al_size) new_tail = 0;
+
+        // Infer phase bit: if new_tail > al_head, same phase as head.
+        // If new_tail <= al_head, opposite phase (wrapped around).
+        // But AL can't be empty right now (branch is still in it).
+        if (new_tail > al_head)
+            al_tail_phase = al_head_phase;
+        else if (new_tail < al_head)
+            al_tail_phase = !al_head_phase;
+        else
+            // new_tail == al_head would mean empty, but branch is in AL so it's non-empty
+            al_tail_phase = !al_head_phase;
+
+        al_tail = new_tail;
+
+        // 5. Clear checkpointed GBMs of surviving branches
+        //    (not strictly needed since restored GBM implicitly frees squashed ones,
+        //    but keeps checkpoint state consistent)
+        for (uint64_t i = 0; i < n_br; i++)
+            CKPT[i].gbm &= ~bit;
+    }
+    
+    
 }
 
 bool renamer::precommit(bool &completed,
