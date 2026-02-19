@@ -463,11 +463,11 @@ bool renamer::precommit(bool &completed,
                         uint64_t &PC)
 {
 
-    //if (al_empty()) {
+    if (al_empty()) {
       //  fprintf(stderr, "PRECOMMIT: AL empty, returning false\n");
       //  fflush(stderr);
-      //  return false;
-   // }
+      return false;
+    }
 
     const AL_entry &e = AL[al_head];
     //fprintf(stderr, "PRECOMMIT: head=%lu PC=0x%lx completed=%d dest=%d\n",
