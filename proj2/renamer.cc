@@ -1,4 +1,4 @@
-// renamer.cc
+// renamer.cc phase-1 done
 #include "renamer.h"
 #include <cassert>
 #include <cstring>
