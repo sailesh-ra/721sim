@@ -1,0 +1,10 @@
+#ifndef RAS_RECOVER_H
+#define RAS_RECOVER_H
+
+typedef enum {
+   RAS_RECOVER_TOS_POINTER,
+   RAS_RECOVER_TOS_POINTER_AND_CONTENT,
+   RAS_RECOVER_WALK
+} ras_recover_e;
+
+#endif //RAS_RECOVER_H

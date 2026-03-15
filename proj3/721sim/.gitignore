@@ -1,0 +1,6 @@
+*.o
+*.a
+icache.h
+uarchsim/721sim
+build
+cmake-build-*
