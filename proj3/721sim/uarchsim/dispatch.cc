@@ -157,9 +157,6 @@ void pipeline_t::dispatch() {
          branch_flag,
          amo_flag,
          csr_flag,
-         PAY.buf[index].C_phys_reg, // physical destination register
-         PAY.buf[index].LQ_index,
-         PAY.buf[index].SQ_index,
          PAY.buf[index].pc            // PC
       );
       // FIX_ME #7 END
