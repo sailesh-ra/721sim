@@ -104,8 +104,8 @@ void pipeline_t::rename2() {
    // This is achieved by doing nothing and proceeding to the next statements.
 
    // FIX_ME #2 BEGIN
-   if (REN->stall(bundle_dst, bundle_branch))
-   return;
+   if (REN->stall_reg(bundle_dst) || REN->stall_branch(bundle_branch))
+      return;
    // FIX_ME #2 END
 
    //

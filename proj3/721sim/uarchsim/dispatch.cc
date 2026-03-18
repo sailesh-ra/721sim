@@ -148,7 +148,7 @@ void pipeline_t::dispatch() {
       amo_flag   = IS_AMO(PAY.buf[index].flags);
       csr_flag   = IS_CSR(PAY.buf[index].flags);
 
-      PAY.buf[index].AL_index = REN->dispatch(
+      PAY.buf[index].AL_index = REN->dispatch_inst(
          PAY.buf[index].C_valid,   // dest_valid
          load_flag,
          store_flag,
