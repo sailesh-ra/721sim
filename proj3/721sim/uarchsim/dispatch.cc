@@ -160,6 +160,7 @@ void pipeline_t::dispatch() {
          PAY.buf[index].C_phys_reg, // physical destination register
          PAY.buf[index].LQ_index,
          PAY.buf[index].SQ_index
+         PAY.buf[index].pc            // PC
       );
       // FIX_ME #7 END
 
