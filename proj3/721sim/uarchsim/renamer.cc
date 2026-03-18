@@ -415,8 +415,39 @@ void renamer::resolve(uint64_t AL_index, uint64_t branch_ID, bool correct) {
    // fprintf(stderr, "RESOLVE called\n"); fflush(stderr);
     assert(branch_ID < n_br);
     uint64_t bit = 1ULL << branch_ID;
-    for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
-    GBM &= ~bit;
+    if (correct) {
+        // Just clear the bit from GBM and all checkpointed GBMs
+        GBM &= ~bit;
+        for (uint64_t i = 0; i < n_br; i++) CKPT[i].gbm &= ~bit;
+    } else {
+        // Misprediction: restore RMT, free list head, GBM from checkpoint
+        // Restore RMT
+        for (uint64_t r = 0; r < n_log; r++)
+            RMT[r] = CKPT[branch_ID].shadow_RMT[r];
+
+        // Restore free list head
+        fl_head = CKPT[branch_ID].fl_head;
+        fl_head_phase = CKPT[branch_ID].fl_head_phase;
+
+        // Restore GBM from checkpoint, clearing this branch's own bit
+        GBM = CKPT[branch_ID].gbm & ~bit;
+
+        // Restore AL tail to just after this branch's entry
+        al_tail = (AL_index + 1) % al_size;
+        // Restore AL tail phase bit
+        // If restored tail > head: same phase as head
+        // If restored tail <= head (wrapped): opposite phase from head
+        // But we know AL is not empty (branch is still in it)
+        if (al_tail > al_head)
+            al_tail_phase = al_head_phase;
+        else if (al_tail < al_head)
+            al_tail_phase = !al_head_phase;
+        else
+            // al_tail == al_head means AL would be empty — but branch is still in it
+            // so this means we wrapped exactly — tail has opposite phase
+            al_tail_phase = !al_head_phase;
+    }
+
 }
 
 bool renamer::precommit(bool &completed,
@@ -425,19 +456,11 @@ bool renamer::precommit(bool &completed,
                         uint64_t &PC)
 {
 
-    //if (al_empty()) {
-      //  fprintf(stderr, "PRECOMMIT: AL empty, returning false\n");
-      //  fflush(stderr);
-      //  return false;
-   // }
+    if (al_empty()) {
+      return false;
+   }
 
     const AL_entry &e = AL[al_head];
-    //fprintf(stderr, "PRECOMMIT: head=%lu PC=0x%lx completed=%d dest=%d\n",
-      //  al_head, e.PC, (int)e.completed, (int)e.dest_valid);
-    // fflush(stderr);
-
-    // If you keep valid bits, This should hold when not empty:
-    // assert(e.valid);
 
     completed = e.completed;
     exception = e.exception;
