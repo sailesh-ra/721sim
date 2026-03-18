@@ -47,6 +47,13 @@ void pipeline_t::register_read(unsigned int lane_number) {
       unsigned int lat = Execution_Lanes[lane_number].ex_depth;
 
       // FIX_ME #11a BEGIN
+      if (PAY.buf[index].C_valid &&
+      lat == 1 &&
+      !IS_LOAD(PAY.buf[index].flags) &&
+      !IS_AMO(PAY.buf[index].flags)) {
+      IQ.wakeup(PAY.buf[index].C_phys_reg, true);
+      REN->set_ready(PAY.buf[index].C_phys_reg);
+   }
       // FIX_ME #11a END
 
       // If the issued instruction is a store:
@@ -84,6 +91,12 @@ void pipeline_t::register_read(unsigned int lane_number) {
       //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       // FIX_ME #12 BEGIN
+      if (PAY.buf[index].A_valid)
+         PAY.buf[index].A_value.dw = REN->read(PAY.buf[index].A_phys_reg);
+      if (PAY.buf[index].B_valid)
+         PAY.buf[index].B_value.dw = REN->read(PAY.buf[index].B_phys_reg);
+      if (PAY.buf[index].D_valid)
+         PAY.buf[index].D_value.dw = REN->read(PAY.buf[index].D_phys_reg);
       // FIX_ME #12 END
 
       //////////////////////////////////////////////////////////////////////////////////////////////////////////

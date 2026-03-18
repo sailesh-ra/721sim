@@ -47,6 +47,10 @@ void pipeline_t::retire(size_t &instret) {
    //      is squashed including the offending instruction.
 
    // FIX_ME #17a BEGIN
+   head_valid = REN->precommit(completed, exception, load_viol,
+                             br_misp, val_misp,
+                             load, store, branch, amo, csr,
+                             offending_PC);
    // FIX_ME #17a END
 
    if (head_valid && completed) { // AL head exists and completed
@@ -79,6 +83,7 @@ void pipeline_t::retire(size_t &instret) {
          //
 
          // FIX_ME #17b BEGIN
+         REN->commit(PAY.buf[PAY.head].C_phys_reg);
          // FIX_ME #17b END
 
          // If the committed instruction is a load or store, signal the LSU to commit its oldest load or store, respectively.

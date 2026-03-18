@@ -38,6 +38,7 @@ void pipeline_t::squash_complete(reg_t jump_PC) {
    //
 
    // FIX_ME #17c BEGIN
+   REN->squash();
    // FIX_ME #17c END
 
 
