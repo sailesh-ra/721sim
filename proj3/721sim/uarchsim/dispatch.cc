@@ -150,6 +150,8 @@ void pipeline_t::dispatch() {
 
       PAY.buf[index].AL_index = REN->dispatch_inst(
          PAY.buf[index].C_valid,   // dest_valid
+         PAY.buf[index].C_log_reg,    // log_reg
+         PAY.buf[index].C_phys_reg,   // phys_reg
          load_flag,
          store_flag,
          branch_flag,
